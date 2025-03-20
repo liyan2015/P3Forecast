@@ -1,0 +1,24 @@
+name: pytorch
+channels:
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/pytorch/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+  - defaults
+dependencies:
+  - python=3.9
+  - ipykernel
+  - pytorch==1.12.1
+  - cudatoolkit=11.3
+  - torchaudio==0.12.1
+  - torchvision==0.13.1
+  - tqdm
+  - pandas
+  - seaborn
+  - statsmodels
+  - matplotlib
+  - pandarallel
+  - scikit-learn
+  - ipywidgets
+  - openpyxl
+  - pywavelets
+prefix: /home/user/miniconda3/envs/pytorch
