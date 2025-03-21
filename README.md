@@ -1,7 +1,7 @@
-# P\textsuperscript{3}Forecast
+# $P^3Forecast$
 <!-- start intro -->
 
-This repository provides the implementation of the paper ["P3Forecast: Personalized Privacy-Preserving Cloud Workload Prediction based on Federated Generative Adversarial Networks"](https://), which is forthcoming in the Proceedings of the IEEE International Parallel and Distributed Processing Symposium (IPDPS 2025). 
+This repository provides the implementation of the paper ["P3Forecast: Personalized Privacy-Preserving Cloud Workload Prediction based on Federated Generative Adversarial Networks"](https://), which is published in the Proceedings of the IEEE International Parallel and Distributed Processing Symposium (IPDPS 2025). 
 In this paper, we propose $P^{3}Forecast$, a 
 $\underline{\textbf{P}}ersonalized$ $\underline{\textbf{P}}rivacy-\underline{\textbf{P}}reserving$ cloud workload prediction framework based on Federated Generative Adversarial Networks (GANs), which allows cloud providers with Non-IID workload data to collaboratively train workload prediction models as preferred while protecting privacy.
 Compared with the state-of-the-art, our framwork improves workload prediction accuracy by 19.5\%-46.7\% in average over all cloud providers, while ensuring the fastest convergence in Federated GAN training.
@@ -23,7 +23,7 @@ Compared with the state-of-the-art, our framwork improves workload prediction ac
 Our framework consists of the following three key components:
 
 <p align="center">
-<img src="fig/framework.png" align="center" width="90%"/>
+<img src="fig/framework.png" align="center" width="80%"/>
 </p>
 
 <!-- end intro -->
