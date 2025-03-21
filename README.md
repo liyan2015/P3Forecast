@@ -58,7 +58,7 @@ The code in the file [lib/post_training.py](https://github.com/liyan2015/P3Forec
 
 [main.py](https://github.com/liyan2015/P3Forecast/tree/main/main.py) is the main function.
 
-You can run the code by executing the file [run.sh](https://github.com/liyan2015/P3Forecast/tree/main/run.sh). The needing parameters are explained as follows:
+The code can be executed with [run.sh](https://github.com/liyan2015/P3Forecast/tree/main/run.sh) using the parameters as follows:
 
 ```bash
 (pytorch) user@host:~/P3Forecast$ bash run.sh -h
@@ -119,13 +119,13 @@ For example, to run the code with the default parameters, you can execute the fo
 bash run.sh 1 "-c cpu_util,mem_util -gle 500 -cr 10 -w pdtw -lrs adaptive -n pdtw,full_workflow"
 ```
 Where $1$ is the number of times to run `main.py`.
-Additionally, you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py).
+Additionally, if you do not use the datasets in [data](https://github.com/liyan2015/P3Forecast/tree/main/data), you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py). The detailed dataset information is as explained in the paper.
 
 <!-- end run -->
 
 ## Prerequisites
 
-To run the code, it needs some libraries:
+To run the code, the following libraries are needed:
 
 - Python >= 3.9
 - fastdtw>=0.3.4
@@ -134,22 +134,25 @@ To run the code, it needs some libraries:
 - Pytorch>=1.12.1
 - torchvision>=0.13
 
-
-To install dependencies, run:
+Check `environment.yaml` for details. To install dependencies, run:
 
 ```bash
 pip install -r requirements.txt
 ```
-Our environment is shown in the file, named `environment.yaml`.
 
-<!-- ## Citing -->
+## Citing
 
 <!-- start citation -->
 
-<!-- If you use this repository, please cite:
+If you use this repository, please cite:
 ```bibtex
-
+@inproceedings{kuangp3forecast,
+  title={{P\textsuperscript{3}Forecast: Personalized Privacy-Preserving Cloud Workload Prediction Based on Federated Generative Adversarial Networks}},
+  author={Kuang, Yu and Yan, Li and Li, Zhuozhao},
+  booktitle={Proc. of IEEE International Parallel \& Distributed Processing Symposium},
+  year={2025},
+}
 ```
-List of publications that cite this work: [Google Scholar]() -->
+<!--List of publications that cite this work: [Google Scholar]()-->
 
 <!-- end citation -->
