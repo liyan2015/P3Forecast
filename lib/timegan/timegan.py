@@ -10,7 +10,7 @@ import torch
 from torch import nn, optim
 from torch.nn import functional as F
 import os
-from parameters import Paths,ID
+from data.parameters import Paths,ID
 from lib.timegan.visualization_metrics import visualization
 from lib.timegan.time_dataset import TimeDataset
 

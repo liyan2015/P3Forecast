@@ -3,7 +3,6 @@ import torch
 import torch.nn as nn
 from torch.nn.utils import weight_norm
 from torch.autograd import Variable
-from parameters import DEVICE
 
 class Chomp1d(nn.Module):
     def __init__(self, chomp_size):
@@ -108,7 +107,7 @@ class TCN(nn.Module):
 
 class LSTM(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, output_dim, n_layers,
+    def __init__(self, input_dim, hidden_dim, output_dim, n_layers, device,
                  batch_fist=True, dropout=0.2):
         super(LSTM, self).__init__()
 
@@ -119,6 +118,7 @@ class LSTM(nn.Module):
         self.fc = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
         self.batch_fist = batch_fist
+        self.device = device
 
     def forward(self, x):
         if self.batch_fist:
@@ -127,10 +127,10 @@ class LSTM(nn.Module):
             batch_size = x.size()[1]
         h_0 = Variable(
             torch.randn(self.num_directions * self.n_layers, batch_size,
-                        self.hidden_dim)).to(DEVICE)
+                        self.hidden_dim)).to(self.device)
         c_0 = Variable(
             torch.randn(self.num_directions * self.n_layers, batch_size,
-                        self.hidden_dim)).to(DEVICE)
+                        self.hidden_dim)).to(self.device)
         output, _ = self.lstm(x, (h_0, c_0))
         out = self.fc(self.relu(output[:, -1, :]))
         return out

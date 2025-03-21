@@ -1,6 +1,6 @@
 '''
 Author: yooki(yooki.k613@gmail.com)
-LastEditTime: 2025-03-20 20:35:26
+LastEditTime: 2025-03-21 14:41:10
 Description: 
 (1) ModelParas: Model parameters class
 (2) TimeSeriesDataset: Time series dataset class
@@ -12,7 +12,8 @@ import math
 from lib.models import TCN,GRU,LSTM,torch,nn
 from lib.utils import np,pd,os,read_dataSet,print_time_lag,metric,save_variants
 from torch.utils.data import Dataset, DataLoader
-from parameters import Paths,Clouds,Clouds_,plt
+from data.parameters import Paths
+import data.parameters as parameters
 import datetime
 from random import shuffle
 from tqdm import tqdm
@@ -233,12 +234,12 @@ class CloudClient:
         elif model_paras.model_type == 'LSTM':
             model = LSTM(model_paras.input_size, model_paras.hidden_size,
                         model_paras.output_size, model_paras.layer_size,
-                        dropout=model_paras.dropout)
+                        model_paras.device,dropout=model_paras.dropout)
         else:
             raise ValueError(f'{model_paras.model_type} model is temporarily not supported!')
         return model
     
-    def train(self,model_paras: ModelParas, columns: list = ['cpu_util'], base_epoch = 0, metric_ = 'rmse',train_type='ours', is_save=True, is_show=True):
+    def train(self,model_paras: ModelParas, columns: list = ['cpu_util'], base_epoch = 0, metric_ = 'rmse', is_save=True):
         '''Train the model for one column but []
 
         Args:
@@ -247,9 +248,7 @@ class CloudClient:
             columns: list, the columns of data
             base_epoch: int, the base epoch
             metric_: str, the evaluation metric
-            train_type: str, the train type
             is_save: bool, whether to save the model
-            is_show: bool, whether to show the loss
 
         Returns:
         ------------
@@ -272,7 +271,7 @@ class CloudClient:
         if type(model_paras.learning_rate) is dict:
             lr_ = model_paras.learning_rate[self.cloud_type]
         elif type(model_paras.learning_rate) is list:
-            lr_ = model_paras.learning_rate[Clouds.index(self.cloud_type)]
+            lr_ = model_paras.learning_rate[parameters.selected_Clouds.index(self.cloud_type)]
         elif type(model_paras.learning_rate) is str:
             lr_  = math.exp(-self.mu*(len(self.gzs)/len(self.df)/model_paras.train_percentage))*float(model_paras.learning_rate)          
         else:
@@ -338,8 +337,8 @@ class CloudClient:
             train_score = metric(train_predictions, train_labels, metric_, 0)
             train_scores.append(train_score)
             epoch_bar.set_description(
-                f"Epoch [{epoch + 1}/{model_paras.num_epochs}]\n"
-                f"Loss: {losses:.4f}\n"
+                f"Epoch [{epoch + 1}/{base_epoch+model_paras.num_epochs}], " +
+                f"Loss: {losses:.4f}, " +
                 f"{metric_.upper()}: {str([round(y, 4) for y in list(test_scores[-1])])} -> {test_scores[-1].mean():.4f}"
             )
         test_scores = np.array(test_scores)
@@ -347,21 +346,7 @@ class CloudClient:
         print_time_lag(start_time,datetime.datetime.now(),f'{self.cloud_type} train {model_paras.model_type} model {model_paras.num_epochs} epochs')
         if is_save:
             torch.save(model.state_dict(), model_save_path)
-            
         train_losses = np.array(train_losses)
-        if is_show:
-            x = np.arange(1, model_paras.num_epochs + 1)
-            interval = 5
-            tri_x = x[::interval]
-            for j,col in enumerate(columns):
-                tri_y = test_scores[::interval,j]
-                plt.plot(x, test_scores[:,j])
-                plt.scatter(tri_x, tri_y)
-            plt.title(f'Test accuracy on test datasets of {self.cloud_type} by {train_type}')
-            plt.legend(columns)
-            plt.xlabel('Epoch')
-            plt.ylabel('Test Accuracy')
-            plt.show()
         return test_scores, train_scores
     
     def test(self,model_paras: ModelParas, columns: list = ['cpu_util']):
@@ -603,7 +588,7 @@ class Center(CloudClient):
         self.id = id
         self.id_ = id
         x = {}
-        for cloud_type in Clouds_:
+        for cloud_type in parameters.selected_Clouds:
             df,_ = read_dataSet(cloud_type,False)
             self.dfs.append(df)
             x[cloud_type] = len(df)
