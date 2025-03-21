@@ -74,9 +74,12 @@ optional arguments:
   -s SEED, --seed SEED  customize seed
   -id ID, --id ID       choose gan models with id
   -cs CLOUDS, --clouds CLOUDS
-                        cloud indexs 0-6, such as 0,1,2,3,4,5,6
+                        cloud indexs 0-6(Alibaba,Azure,Google,Alibaba-AI,HPC-KS,HPC-HF,HPC-WZ), such as 0,1,2,3,4,5,6
   -p PROBABILITY, --probability PROBABILITY
                         the probability of cloud selected
+  -pd, --preprocess_dataset
+                        with True preprocess dataset, without False directly use the preprocessed dataset
+  -rf, --refresh        with True refresh histoty data, without False
   -ghs GAN_HIDDEN_SIZE, --gan_hidden_size GAN_HIDDEN_SIZE
                         hidden size of timegan
   -gln GAN_LAYER_NUM, --gan_layer_num GAN_LAYER_NUM
@@ -110,15 +113,19 @@ optional arguments:
                         learning rate of predictor
   -lrs {fixed,adaptive}, --learning_rate_strategy {fixed,adaptive}
                         learning rate strategy of post training
+  -mc {rmse,smape}, --metric {rmse,smape}
+                        metric of test accuracy of post training
   -mu MU, --mu MU       parameter mu to control the learning rate
   -nq, --not_query      with means False not query, without means True query
+  -sh, --show           with means True show plt, without means False not show
 ```
 
 For example, to run the code with the default parameters, you can execute the following command:
 ```bash
-bash run.sh 1 "-c cpu_util,mem_util -gle 500 -cr 10 -w pdtw -lrs adaptive -n pdtw,full_workflow"
+bash run.sh 1 "-cs 0,1,2,3 -c cpu_util,mem_util -gle 500 -w pdtw -rf -sh -lrs adaptive -n pdtw,full_workflow"
 ```
-Where $1$ is the number of times to run `main.py`.
+where $1$ is the number of times to run `main.py`.
+
 Additionally, if you do not use the datasets in [data](https://github.com/liyan2015/P3Forecast/tree/main/data), you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py). The detailed dataset information is as explained in the paper.
 
 <!-- end run -->

@@ -1,6 +1,6 @@
 '''
 Author: yooki(yooki.k613@gmail.com)
-LastEditTime: 2025-03-20 21:23:49
+LastEditTime: 2025-03-21 14:45:45
 Description: utils
 
 (1) read_dataset: Read data from csv file
@@ -15,7 +15,7 @@ Description: utils
 (6) metric: Evaluation metrics of the model
 '''
 
-from parameters import os, data2018_path, dataAzure_path, data2020_path, dataSugon_path, DataSets, Intervals, Clouds, Paths
+from data.parameters import os, data2018_path, data_Azure_path, data2020_path, data_HPC_path, DataSets, Intervals, Clouds, Paths
 import pandas as pd
 import pickle
 import re
@@ -176,9 +176,9 @@ def read_dataSet(cloud_type, isRaw=True):
                                 ],
                                 usecols=['machine_id', 'time', 'cpu_util','mem_util'])
         elif cloud_type == 'Azure':
-            df1 = pd.read_csv(dataAzure_path + 'cluster_cpu_util.csv')
-            df2 = pd.read_csv(dataAzure_path + 'cluster_mem_util.csv')
-            reader = pd.read_csv(dataAzure_path + 'cluster_gpu_util.csv', chunksize=1)
+            df1 = pd.read_csv(data_Azure_path + 'cluster_cpu_util.csv')
+            df2 = pd.read_csv(data_Azure_path + 'cluster_mem_util.csv')
+            reader = pd.read_csv(data_Azure_path + 'cluster_gpu_util.csv', chunksize=1)
             times = []
             gpus = []
             machines = []
@@ -200,7 +200,7 @@ def read_dataSet(cloud_type, isRaw=True):
             df = pd.merge(df1, df2, on=['time','machine_id'])
             df = pd.merge(df, df3, on=['time','machine_id'])
             df=df.dropna()
-        elif cloud_type == 'Alibaba-ML':
+        elif cloud_type == 'Alibaba-AI':
             df1 = pd.read_csv(
                 data2020_path + 'pai_machine_metric.csv',
                 usecols=[0, 1, 2, 3, 7, 11],
@@ -218,17 +218,17 @@ def read_dataSet(cloud_type, isRaw=True):
             df2['mem_util'] = df2['avg_mem'].astype('float')/df2['cap_mem'].astype('float')*100
             df2.drop(['avg_mem', 'cap_mem'], axis=1, inplace=True)
             df = pd.merge(df1, df2, on=['worker_name','machine_id'])           
-        elif 'Sugon' in  cloud_type:
-            if cloud_type == 'Sugon-HF':
-                path_ = dataSugon_path + 'hefei-(22.1-22.6).csv'
+        elif 'HPC' in  cloud_type:
+            if cloud_type == 'HPC-HF':
+                path_ = data_HPC_path + 'hefei-(22.1-22.6).csv'
                 u=128
-            elif cloud_type == 'Sugon-KS':
-                path_ = dataSugon_path + 'ks-(22.1-22.2).csv'
+            elif cloud_type == 'HPC-KS':
+                path_ = data_HPC_path + 'ks-(22.1-22.2).csv'
                 u=32
-            elif cloud_type == 'Sugon-WZ':
-                path_ = dataSugon_path + 'wuzhen-(2.1-22.6).csv'
+            elif cloud_type == 'HPC-WZ':
+                path_ = data_HPC_path + 'wuzhen-(2.1-22.6).csv'
                 u=1
-            if cloud_type == 'Sugon-HF':
+            if cloud_type == 'HPC-HF':
                 df = pd.read_csv(
                     path_,
                     usecols=[1, 9, 13, 14, 18, 20, 21, 24],

@@ -15,7 +15,7 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import numpy as np
-from parameters import Paths,font1
+from data.parameters import Paths,font1
 
 def visualization(ori_data, generated_data, analysis, cols, name, is_save=False):
     """Using PCA or tSNE or compare for generated and original data visualization.

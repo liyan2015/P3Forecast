@@ -1,17 +1,17 @@
 '''
 Author: yooki(yooki.k613@gmail.com)
-LastEditTime: 2025-03-20 20:01:11
+LastEditTime: 2025-03-21 14:41:31
 Description: Federated GAN Training based on Data Synthesis Quality
 '''
 import copy
 from lib.utils import load_variants,save_variants,add_to_csv
-from parameters import Paths,ID,Clouds_
+import data.parameters as parameters
 from lib.classes import ModelParas,CloudClient,torch,np,pd,os
 
 def client(cloud: CloudClient,
         generate_paras: ModelParas = None,
         columes=['cpu_util'],
-        train_type = 'local',
+        train_type = 'ours',
         base_epoch = 0,
         is_gan_train = False,
         is_gan_pre = True,
@@ -32,7 +32,7 @@ def client(cloud: CloudClient,
         args: argparse.Namespace, the other parameters
 
     """
-    print(cloud.cloud_type)
+    print('cloud: ',cloud.cloud_type)
     if cloud.gzs is None:
         cloud.gzs = []
     if args is not None and args.weight in ['dtw','pdtw']:
@@ -41,7 +41,7 @@ def client(cloud: CloudClient,
         e_methods = ('mmd',)
     if is_gan_train:
         train_interval = 100  # gan training interval to record evaluation
-        epochs=np.ceil(generate_paras.num_epochs/train_interval)
+        epochs=int(np.ceil(generate_paras.num_epochs/train_interval))
         train_epochs = generate_paras.num_epochs
         losses = []
         res={}
@@ -74,13 +74,10 @@ def client(cloud: CloudClient,
             'loss_d':[y for x in losses for y in x[3]],
             'loss_s':[y for x in losses for y in x[4]],
         }
-        print(LS['epoch'])
-        print(len(LS['epoch']))
-        print(LS['loss_g'])
-        print(len(LS['loss_g']))
         df = pd.DataFrame(LS)
-        filename__ = Paths['results']+f'/{cloud.cloud_type}/{train_type}_{cloud.id}_loss.csv'
+        filename__ = parameters.Paths['results']+f'/{cloud.cloud_type}/{train_type}_{cloud.id}_loss.csv'
         add_to_csv(filename__, df)
+        print(f"Saved loss to {filename__}")
         
         EV = {'epoch': np.arange(train_interval+base_epoch, 1+base_epoch+generate_paras.num_epochs, train_interval).tolist()}
         for method in e_methods:
@@ -89,8 +86,9 @@ def client(cloud: CloudClient,
             else:
                 EV[method.upper()] = [x.mean() for x in res[method]] 
         df = pd.DataFrame(EV)
-        filename_ = Paths['results']+f'/{cloud.cloud_type}/{train_type}_{cloud.id}_eval.csv'
+        filename_ = parameters.Paths['results']+f'/{cloud.cloud_type}/{train_type}_{cloud.id}_eval.csv'
         add_to_csv(filename_, df)
+        print(f"Saved eval to {filename_}")
 
 def fedavg(w,weights):
     """Federated average
@@ -116,7 +114,7 @@ def fedavg(w,weights):
             w_avg[k] += w[i][k] * weights[i]
     return w_avg
 
-def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global_epoch, id_, K=7, id=ID, args=None):
+def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global_epoch, id_, K=7, id=parameters.ID, args=None):
     """ in Federated learning environment, train the gan model
 
     Args:
@@ -132,11 +130,10 @@ def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global
         id: int, the id
         **kwargs: the other parameters
     """
-    idx = np.random.choice(range(len(Clouds_)),K,replace=False)
     global_epoch = global_epoch
     for epoch in range(global_epoch):
         print(f"Rounds {epoch+1}/{global_epoch}")
-        idx = np.random.choice(range(len(Clouds_)),K,replace=False)
+        idx = np.random.choice(range(len(parameters.selected_Clouds)),K,replace=False)
         w_ds,w_es,w_gs,w_rs,w_ss,ns = [],[],[],[],[],[]
         for i in idx:
             cloud = clouds[i]
@@ -154,11 +151,11 @@ def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global
             else:
                 dataSizes = load_variants(f'dataSizes_{id}')
                 ns.append(dataSizes[cloud.cloud_type])
-            w_es.append(torch.load(Paths['timegan_model'] + "/%s/embedder_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_gs.append(torch.load(Paths['timegan_model'] + "/%s/generator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_rs.append(torch.load(Paths['timegan_model'] + "/%s/recovery_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_ss.append(torch.load(Paths['timegan_model'] + "/%s/supervisor_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_ds.append(torch.load(Paths['timegan_model'] + "/%s/discriminator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+            w_es.append(torch.load(parameters.Paths['timegan_model'] + "/%s/embedder_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+            w_gs.append(torch.load(parameters.Paths['timegan_model'] + "/%s/generator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+            w_rs.append(torch.load(parameters.Paths['timegan_model'] + "/%s/recovery_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+            w_ss.append(torch.load(parameters.Paths['timegan_model'] + "/%s/supervisor_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+            w_ds.append(torch.load(parameters.Paths['timegan_model'] + "/%s/discriminator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
         if not args.gan_not_train:
             continue
         w_e = fedavg(w_es,ns)
@@ -166,11 +163,11 @@ def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global
         w_r = fedavg(w_rs,ns)
         w_s = fedavg(w_ss,ns)
         w_d = fedavg(w_ds,ns)
-        if not os.path.exists(Paths['timegan_model'] + "/%s"%train_type):
-            os.mkdir(Paths['timegan_model'] + "/%s"%train_type)
-        torch.save(w_e, Paths['timegan_model'] + "/%s/embedder_%d.pt"%(train_type,id_))
-        torch.save(w_g, Paths['timegan_model'] + "/%s/generator_%d.pt"%(train_type,id_))
-        torch.save(w_r, Paths['timegan_model'] + "/%s/recovery_%d.pt"%(train_type,id_))
-        torch.save(w_s, Paths['timegan_model'] + "/%s/supervisor_%d.pt"%(train_type,id_))
-        torch.save(w_d, Paths['timegan_model'] + "/%s/discriminator_%d.pt"%(train_type,id_))
+        if not os.path.exists(parameters.Paths['timegan_model'] + "/%s"%train_type):
+            os.mkdir(parameters.Paths['timegan_model'] + "/%s"%train_type)
+        torch.save(w_e, parameters.Paths['timegan_model'] + "/%s/embedder_%d.pt"%(train_type,id_))
+        torch.save(w_g, parameters.Paths['timegan_model'] + "/%s/generator_%d.pt"%(train_type,id_))
+        torch.save(w_r, parameters.Paths['timegan_model'] + "/%s/recovery_%d.pt"%(train_type,id_))
+        torch.save(w_s, parameters.Paths['timegan_model'] + "/%s/supervisor_%d.pt"%(train_type,id_))
+        torch.save(w_d, parameters.Paths['timegan_model'] + "/%s/discriminator_%d.pt"%(train_type,id_))
 
