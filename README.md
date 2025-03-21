@@ -1,4 +1,4 @@
-# $P^3Forecast$
+# P\textsuperscript{3}Forecast
 <!-- start intro -->
 
 This repository provides the implementation of the paper ["P3Forecast: Personalized Privacy-Preserving Cloud Workload Prediction based on Federated Generative Adversarial Networks"](https://), which is forthcoming in the Proceedings of the IEEE International Parallel and Distributed Processing Symposium (IPDPS 2025). 
