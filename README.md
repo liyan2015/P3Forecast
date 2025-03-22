@@ -1,7 +1,7 @@
 # $P^3Forecast$
 <!-- start intro -->
 
-This repository provides the implementation of the paper ["P3Forecast: Personalized Privacy-Preserving Cloud Workload Prediction based on Federated Generative Adversarial Networks"](https://), which is forthcoming in the Proceedings of the IEEE International Parallel and Distributed Processing Symposium (IPDPS 2025). 
+This repository provides the implementation of the paper ["P3Forecast: Personalized Privacy-Preserving Cloud Workload Prediction based on Federated Generative Adversarial Networks"](https://liyan2015.github.io/papers/conference/ipdps_yu_25.pdf), which is published in the Proceedings of the IEEE International Parallel and Distributed Processing Symposium (IPDPS 2025). 
 In this paper, we propose $P^{3}Forecast$, a 
 $\underline{\textbf{P}}ersonalized$ $\underline{\textbf{P}}rivacy-\underline{\textbf{P}}reserving$ cloud workload prediction framework based on Federated Generative Adversarial Networks (GANs), which allows cloud providers with Non-IID workload data to collaboratively train workload prediction models as preferred while protecting privacy.
 Compared with the state-of-the-art, our framwork improves workload prediction accuracy by 19.5\%-46.7\% in average over all cloud providers, while ensuring the fastest convergence in Federated GAN training.
@@ -23,7 +23,7 @@ Compared with the state-of-the-art, our framwork improves workload prediction ac
 Our framework consists of the following three key components:
 
 <p align="center">
-<img src="fig/framework.png" align="center" width="90%"/>
+<img src="fig/framework.png" align="center" width="80%"/>
 </p>
 
 <!-- end intro -->
@@ -58,6 +58,7 @@ The code in the file [lib/post_training.py](https://github.com/liyan2015/P3Forec
 
 [main.py](https://github.com/liyan2015/P3Forecast/tree/main/main.py) is the main function.
 
+The code can be executed with [run.sh](https://github.com/liyan2015/P3Forecast/tree/main/run.sh) using the parameters as follows:
  We already provide preprocessed public dataset of four clouds (`Alibaba`, `Azure`, `Google`, `Alibaba-AI`) in the folder `data/`. If you want to add new datasets, you can refer to the code in the file [lib/preprocess.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/preprocess.py).
 Please ensure that your new dataset meets the following requirements:
 
@@ -133,14 +134,16 @@ optional arguments:
 For example, you can execute the following command to run the code:
 ```bash
 bash run.sh 1 "-cs 0,1,2,3 -c cpu_util,mem_util -gle 500 -w pdtw -rf -sh -lrs adaptive -n pdtw,full_workflow"
-```Where $1$ is the number of times to run `main.py`.
+```
+where $1$ is the number of times to run `main.py`.
 
+Additionally, if you do not use the datasets in [data](https://github.com/liyan2015/P3Forecast/tree/main/data), you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py). The detailed dataset information is as explained in the paper.
 
 <!-- end run -->
 
 ## Prerequisites
 
-To run the code, it needs some libraries:
+To run the code, the following libraries are needed:
 
 - Python >= 3.9
 - fastdtw>=0.3.4
@@ -149,22 +152,26 @@ To run the code, it needs some libraries:
 - Pytorch>=1.12.1
 - torchvision>=0.13
 
-
-To install dependencies, run:
+Check `environment.yaml` for details. To install dependencies, run:
 
 ```bash
 pip install -r requirements.txt
 ```
-Our environment is shown in the file, named `environment.yaml`.
 
-<!-- ## Citing -->
+## Citing
 
 <!-- start citation -->
 
-<!-- If you use this repository, please cite:
+If you use this repository, please cite:
 ```bibtex
-
+@inproceedings{kuangp3forecast,
+  title={{P\textsuperscript{3}Forecast: Personalized Privacy-Preserving Cloud Workload Prediction Based on Federated Generative Adversarial Networks}},
+  author={Kuang, Yu and Yan, Li and Li, Zhuozhao},
+  booktitle={Proc. of IEEE International Parallel \& Distributed Processing Symposium},
+  year={2025},
+}
 ```
-List of publications that cite this work: [Google Scholar]() -->
+<!--List of publications that cite this work: [Google Scholar]()-->
 
 <!-- end citation -->
+
