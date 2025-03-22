@@ -7,7 +7,7 @@ Description: Preprocess the cloud raw data
 '''
 from lib.utils import read_dataSet,get_time,parse_string,parse_time,print_time_lag,np,pd,datetime
 from tqdm import tqdm
-from data.parameters import data_Google_path,Clouds,Intervals,Colors,plt
+from data.parameters import data_Google_path,Clouds,Intervals,Colors,plt,Paths
 
 def cal_stats(cloud_type, columns=['cpu_util'],
                 freqs={
@@ -71,7 +71,6 @@ def cal_stats(cloud_type, columns=['cpu_util'],
                 'std': '%s_std' % column.split('_')[0]
             })
             dfs.append(df_)
-        # 根据time合并dfs
         df = dfs[0]
         if len(dfs) > 1:
             for i in range(1,len(dfs)):
@@ -82,14 +81,14 @@ def cal_stats(cloud_type, columns=['cpu_util'],
     if isShow:
         plt.figure(figsize=(15, 5))
         for i,column in enumerate(columns):
-            plt.plot(df['time'], df[column], Colors[i], label=column)
+            plt.plot(df[column], Colors[i], label=column)
+            # plt.plot(df['time'], df[column], Colors[i], label=column)
         plt.title('Workload of %s' % (cloud_type))
         plt.legend()
         plt.xlabel('Time')
         plt.ylabel('Workload(%)')
+        plt.savefig(f'{Paths["images"]}/{cloud_type}_{freq}.png')
         plt.show()
-
-
 
 def cal_Google_stats(freq, columns):
     """

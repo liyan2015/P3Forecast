@@ -3,14 +3,24 @@ Author: yooki(yooki.k613@gmail.com)
 LastEditTime: 2025-03-21 14:58:40
 Description: shared parameters
 '''
+import matplotlib
+matplotlib.use('Agg') 
 import matplotlib.pyplot as plt
 # import seaborn as sns
 import os,time
 from random import randint
-# --------------update--------------
+# --------------update begin--------------
 original_data_path = '/usr/data1/'
 output_path = './output'
 data_path = './data/'
+# Number of seconds corresponding to the sampling frequency of the dataset
+Intervals = {'10S':10,'1T': 60, '5T': 300, '10T':600, '15T': 900,'30T':1800}
+# --------------clients--------------
+# All cloud providers
+Clouds = ['Alibaba', 'Azure', 'Google', 'Alibaba-AI',
+          'HPC-KS','HPC-HF', 'HPC-WZ'] 
+# Selected cloud providers
+selected_Clouds = Clouds.copy() 
 
 # --------------dataset--------------
 # Raw dataset file path
@@ -29,13 +39,7 @@ DataSets = [
     data_path+'HPC-HF_5T.csv', 
     data_path+'HPC-WZ_30T.csv' 
 ]
-
-# --------------clients--------------
-# All cloud providers
-Clouds = ['Alibaba', 'Azure', 'Google', 'Alibaba-AI',
-          'HPC-KS','HPC-HF', 'HPC-WZ'] 
-# Selected cloud providers
-selected_Clouds = Clouds.copy() 
+# --------------update end--------------
 
 # --------------plot--------------
 font2 = {
@@ -81,5 +85,4 @@ Paths = {
 for key in Paths:
     if not os.path.exists(Paths[key]):
         os.makedirs(Paths[key])
-Intervals = {'10S':10,'1T': 60, '5T': 300, '10T':600, '15T': 900,'30T':1800}
 

@@ -1,12 +1,12 @@
 '''
 Author: yooki(yooki.k613@gmail.com)
-LastEditTime: 2025-03-21 14:18:13
+LastEditTime: 2025-03-22 06:49:03
 Description: Post-Training of Local Workload Prediction Models
 '''
-from lib.utils import add_to_csv,custom_modelparas
+from lib.utils import add_to_csv,custom_modelparas,copy
 import data.parameters as parameters
 from data.parameters import plt
-from lib.classes import ModelParas,CloudClient,np,pd
+from lib.classes import ModelParas,CloudClient,np,pd,threading
 
 def client(cloud: CloudClient,
         predict_paras: ModelParas = None,
@@ -53,7 +53,7 @@ def client(cloud: CloudClient,
         'epoch': np.arange(1+base_epoch, predict_paras.num_epochs + 1 + base_epoch).tolist()
     }
     test_scores,  train_scores= cloud.train(predict_paras,columes,base_epoch,metric_=metric_,is_save=True)
-    print("--------finished train model------------")
+    print(cloud.cloud_type, "--------finished train model------------")
     for i in range(len(columes)):
         DT[f"test_{columes[i]}"] = test_scores[:,i].tolist()
         DT[f"train_{columes[i]}"] = train_scores[:,i].tolist()
@@ -62,7 +62,7 @@ def client(cloud: CloudClient,
     df = pd.DataFrame(DT)
     filename_ = parameters.Paths['results']+f'/{cloud.cloud_type}/{train_type}_{cloud.id}.csv'
     add_to_csv(filename_, df)
-    print(f"save predictive results to {filename_}")
+    print(cloud.cloud_type,f"save predictive results to {filename_}")
     return test_scores
 
 def post_training(predict_paras,generate_paras,clouds,columes,train_type,paras,args,K, metric_='rmse',is_show=False):
@@ -82,26 +82,39 @@ def post_training(predict_paras,generate_paras,clouds,columes,train_type,paras,a
         is_show: bool, whether to show the plot
     """
     idx = np.random.choice(range(len(parameters.selected_Clouds)),K,replace=False)
+    threads = []
     for index,i in enumerate(idx):
         cloud = clouds[i]
-        print(f"Clients {index+1}/{K}: ",cloud.cloud_type)
-        r = args.epochs//args.local_epochs_post
-        test_scores = np.zeros((args.epochs,len(columes)))
-        for j in range(r):
-            test_scores[j*predict_paras.num_epochs:(j+1)*predict_paras.num_epochs,:] = client(cloud,custom_modelparas(predict_paras,cloud.cloud_type,paras,train_type),generate_paras,columes,base_epoch=j*predict_paras.num_epochs,train_type = train_type,metric_=metric_,args=args)
+        generate_paras_ = copy.deepcopy(generate_paras)
+        predict_paras_ = copy.deepcopy(predict_paras)
+        generate_paras_.device = cloud.device
+        predict_paras_.device = cloud.device
 
-        if is_show:
-            x = np.arange(1, predict_paras.num_epochs + 1)
-            interval = 5
-            tri_x = x[::interval]
-            for j,col in enumerate(columes):
-                tri_y = test_scores[::interval,j]
-                plt.plot(x, test_scores[:,j])
-                plt.scatter(tri_x, tri_y)
-            plt.title(f'Test accuracy on test datasets of {cloud.cloud_type} by {train_type}')
-            plt.legend(columes)
-            plt.xlabel('Epoch')
-            plt.ylabel(metric_.upper())
-            plt.show()
-            plt.savefig(f'{parameters.Paths["images"]}/{cloud.cloud_type}_{train_type}_{cloud.id}.png')
-            
+        def run_client(cloud,predict_paras,generate_paras,columes,train_type,metric_,args):
+            print(f"Clients {index+1}/{K}: ",cloud.cloud_type)
+            r = args.epochs//args.local_epochs_post
+            test_scores = np.zeros((args.epochs,len(columes)))
+            for j in range(r):
+                test_scores[j*predict_paras.num_epochs:(j+1)*predict_paras.num_epochs,:] = client(cloud,custom_modelparas(predict_paras,cloud.cloud_type,paras,train_type),generate_paras,columes,base_epoch=j*predict_paras.num_epochs,train_type = train_type,metric_=metric_,args=args)
+
+            if is_show:
+                fig, ax = plt.subplots(1,1)
+                x = np.arange(1, args.epochs + 1)
+                interval = 5
+                tri_x = x[::interval][1:]-1
+                for j,col in enumerate(columes):
+                    tri_y = test_scores[::interval,j]
+                    ax.plot(x, test_scores[:,j],label=col)
+                    ax.scatter(tri_x, tri_y)
+                # plt.title(f'Test accuracy on test datasets of {cloud.cloud_type} by {train_type}')
+                ax.legend()
+                ax.set_xlabel('Epoch')
+                ax.set_ylabel(metric_.upper())
+                fig.savefig(f'{parameters.Paths["images"]}/{cloud.cloud_type}_{train_type}_{cloud.id}.png')
+                plt.close(fig)
+                print(f"save plot to {parameters.Paths['images']}/{cloud.cloud_type}_{train_type}_{cloud.id}.png")
+        t = threading.Thread(target=run_client,args=(cloud,predict_paras_,generate_paras_,columes,train_type,metric_,args), daemon=True)     
+        t.start()
+        threads.append(t)
+    for t in threads:
+        t.join()

@@ -58,7 +58,17 @@ The code in the file [lib/post_training.py](https://github.com/liyan2015/P3Forec
 
 [main.py](https://github.com/liyan2015/P3Forecast/tree/main/main.py) is the main function.
 
-You can run the code by executing the file [run.sh](https://github.com/liyan2015/P3Forecast/tree/main/run.sh). The needing parameters are explained as follows:
+ We already provide preprocessed public dataset of four clouds (`Alibaba`, `Azure`, `Google`, `Alibaba-AI`) in the folder `data/`. If you want to add new datasets, you can refer to the code in the file [lib/preprocess.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/preprocess.py).
+Please ensure that your new dataset meets the following requirements:
+
+- **Format**: CSV file.
+- **Filename Convention**: The filename must follow the format `{cloud_type}_{freq}.csv`.
+- **Required Columns**: The CSV should include time and workload data. (For example, refer to the format of `Alibaba_1T.csv`.)
+
+Additionally, you can configure dataset-related parameters in the [data/parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/data/parameters.py) file.
+
+You can run the code by executing the file [run.sh](https://github.com/liyan2015/P3Forecast/tree/main/run.sh).
+All the arguments are explained as follows:
 
 ```bash
 (pytorch) user@host:~/P3Forecast$ bash run.sh -h
@@ -67,7 +77,7 @@ Usage: bash run.sh [run_times] [args]
 Parameters required to run the program
 optional arguments:
   -h, --help            show this help message and exit
-  -g GPU, --gpu GPU     gpu device, if -1, use cpu
+  -g GPU, --gpu GPU     gpu device, if -1, use cpu; if None, use all gpu
   -c COLUMES, --columes COLUMES
                         dataset columes
   -n NOTE, --note NOTE  note of this run
@@ -120,12 +130,11 @@ optional arguments:
   -sh, --show           with means True show plt, without means False not show
 ```
 
-For example, to run the code with the default parameters, you can execute the following command:
+For example, you can execute the following command to run the code:
 ```bash
 bash run.sh 1 "-cs 0,1,2,3 -c cpu_util,mem_util -gle 500 -w pdtw -rf -sh -lrs adaptive -n pdtw,full_workflow"
-```
-Where $1$ is the number of times to run `main.py`.
-Additionally, you can set some parameters about the dataset in the file [data/parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/data/parameters.py).
+```Where $1$ is the number of times to run `main.py`.
+
 
 <!-- end run -->
 

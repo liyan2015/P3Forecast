@@ -61,14 +61,14 @@ def visualization(ori_data, generated_data, analysis, cols, name, is_save=False)
             # Plotting
             f, ax = plt.subplots(1)
             ax.grid(False)
-            plt.scatter(
+            ax.scatter(
                 pca_results[:, 0],
                 pca_results[:, 1],
                 c=colors[:anal_sample_no],
                 alpha=0.2,
                 label="Original",
             )
-            plt.scatter(
+            ax.scatter(
                 pca_hat_results[:, 0],
                 pca_hat_results[:, 1],
                 c=colors[anal_sample_no:],
@@ -76,8 +76,8 @@ def visualization(ori_data, generated_data, analysis, cols, name, is_save=False)
                 label="Synthetic",
             )
             ax.legend(prop=font1)
-            plt.xlabel("x-pca")
-            plt.ylabel("y-pca")
+            ax.set_xlabel("x-pca")
+            ax.set_ylabel("y-pca")
             ax.xaxis.set_tick_params(width=1.5)
             ax.yaxis.set_tick_params(width=1.5)
             ax.spines['top'].set_linewidth(1.5)
@@ -91,7 +91,7 @@ def visualization(ori_data, generated_data, analysis, cols, name, is_save=False)
             plt.margins(0.0)
             plt.tight_layout(pad=0.1)
             if is_save:
-                plt.savefig(Paths['images']+"/Ana_%s_PCA.pdf"%(name), format="pdf", bbox_inches='tight',pad_inches=0)
+                f.savefig(Paths['images']+"/Ana_%s_PCA.pdf"%(name), format="pdf", bbox_inches='tight',pad_inches=0)
             plt.show()
 
         elif x == "tsne":
@@ -102,14 +102,14 @@ def visualization(ori_data, generated_data, analysis, cols, name, is_save=False)
             tsne_results = tsne.fit_transform(prep_data_final)
             # Plotting
             f, ax = plt.subplots(1)
-            plt.scatter(
+            ax.scatter(
                 tsne_results[:anal_sample_no, 0],
                 tsne_results[:anal_sample_no, 1],
                 c=colors[:anal_sample_no],
                 alpha=0.2,
                 label="Original",
             )
-            plt.scatter(
+            ax.scatter(
                 tsne_results[anal_sample_no:, 0],
                 tsne_results[anal_sample_no:, 1],
                 c=colors[anal_sample_no:],
@@ -118,8 +118,8 @@ def visualization(ori_data, generated_data, analysis, cols, name, is_save=False)
             )
             ax.legend(prop=font1)
             # ax.legend(prop=font1, loc=4, ncol=1, frameon=False)
-            plt.xlabel("x-tsne")
-            plt.ylabel("y-tsne")
+            ax.set_xlabel("x-tsne")
+            ax.set_ylabel("y-tsne")
             ax.xaxis.set_tick_params(width=1.5)
             ax.yaxis.set_tick_params(width=1.5)
             ax.spines['top'].set_linewidth(1.5)
@@ -133,13 +133,13 @@ def visualization(ori_data, generated_data, analysis, cols, name, is_save=False)
             plt.margins(0.0)
             plt.tight_layout(pad=0.1)
             if is_save:
-                plt.savefig(Paths['images']+"/Ana_%s_TSNE.pdf"%(name), format="pdf", bbox_inches='tight',pad_inches=0)
+                f.savefig(Paths['images']+"/Ana_%s_TSNE.pdf"%(name), format="pdf", bbox_inches='tight',pad_inches=0)
             plt.show()
 
         elif x == "data":
             idx_ = np.random.randint(0, 1000)
             for j, col in enumerate(cols):
-                fig, ax = plt.subplots(1)
+                f, ax = plt.subplots(1)
                 x = np.arange(seq_len)
                 y_real = ori_data[idx_, :, j]
                 y_synthetic = generated_data[idx_, :, j]
@@ -151,5 +151,5 @@ def visualization(ori_data, generated_data, analysis, cols, name, is_save=False)
                 ax.legend(prop=font1)
                 plt.tight_layout(pad=0.1)
                 if is_save:
-                    plt.savefig(Paths['images'] + "/Ana_{}_Data.pdf".format(name), format="pdf", bbox_inches='tight', pad_inches=0)
+                    f.savefig(Paths['images'] + "/Ana_{}_Data.pdf".format(name), format="pdf", bbox_inches='tight', pad_inches=0)
                 plt.show()
