@@ -1,6 +1,6 @@
 '''
 Author: yooki(yooki.k613@gmail.com)
-LastEditTime: 2025-03-21 14:41:10
+LastEditTime: 2025-03-22 06:51:59
 Description: 
 (1) ModelParas: Model parameters class
 (2) TimeSeriesDataset: Time series dataset class
@@ -19,7 +19,7 @@ from random import shuffle
 from tqdm import tqdm
 from lib.timegan.timegan import TimeGAN,TimeDataset
 from lib.similarity import fastdtw,euclidean,fastpdtw,mmd_rbf
-
+import threading
 class ModelParas:
     """
     Model Parameters class
@@ -213,8 +213,7 @@ class CloudClient:
                             shuffle=is_shuffle)
 
 
-    @staticmethod
-    def init_model(model_paras: ModelParas):
+    def init_model(self,model_paras: ModelParas):
         '''Initialize the model
 
         Args:
@@ -234,7 +233,7 @@ class CloudClient:
         elif model_paras.model_type == 'LSTM':
             model = LSTM(model_paras.input_size, model_paras.hidden_size,
                         model_paras.output_size, model_paras.layer_size,
-                        model_paras.device,dropout=model_paras.dropout)
+                        self.device,dropout=model_paras.dropout)
         else:
             raise ValueError(f'{model_paras.model_type} model is temporarily not supported!')
         return model
@@ -278,7 +277,7 @@ class CloudClient:
             lr_ = model_paras.learning_rate
 
         # txt = f'Learning rate: {lr_}, Gen Data Length: {len(self.gzs)}'
-        # print(txt)
+        # print(self.cloud_type,txt)
         optimizer = torch.optim.Adam(model.parameters(),lr=lr_)
         test_scores = []
         train_scores = []
@@ -321,7 +320,7 @@ class CloudClient:
                             test_labels[i].append(labels)
                             losses += loss.item()
                         except Exception as e:
-                            print('ERROR: ', e)
+                            print(self.cloud_type,'ERROR: ', e)
             losses = losses / len(self.__test_loader)
             if is_save:
                 torch.save(model.state_dict(), model_save_path)
@@ -380,9 +379,9 @@ class CloudClient:
                         test_labels[i].append(labels)
                         total_loss += loss.item() * len(inputs)
                     except Exception as e:
-                        print('ERROR: ', e)
+                        print(self.cloud_type,'ERROR: ', e)
         txt = "loss on test data: {}".format(total_loss)
-        print(txt)
+        print(self.cloud_type,txt)
         # max_x, min_x = self.ct.get_max_min()
         rmses = np.zeros((len(self.__test_loader),len(columns)))
         smapes = np.zeros((len(self.__test_loader),len(columns)))
@@ -394,11 +393,11 @@ class CloudClient:
             smapes[i] = metric(test_predictions[i], test_labels[i], 'smape',0)
             maes[i] = metric(test_predictions[i], test_labels[i], 'mae',0)
         txt = '{} on test data: {}'.format('rmse'.upper(),rmses.mean())
-        print(txt)
+        print(self.cloud_type,txt)
         txt = '{} on test data: {}'.format('smape'.upper(),smapes.mean())
-        print(txt)
+        print(self.cloud_type,txt)
         txt = '{} on test data: {}'.format('mae'.upper(),maes.mean())
-        print(txt)
+        print(self.cloud_type,txt)
         test_predictions = np.row_stack(test_predictions)
         test_labels = np.row_stack(test_labels)
         return test_predictions, test_labels
@@ -437,7 +436,7 @@ class CloudClient:
                     test_labels.append(labels)
                     total_loss += loss.item() * len(inputs)
                 except Exception as e:
-                    print('ERROR: ', e)
+                    print(self.cloud_type,'ERROR: ', e)
         # txt = "loss on test data: {}".format(total_loss)
         # print(txt)
         test_predictions = torch.cat(test_predictions).cpu().numpy()
@@ -536,13 +535,13 @@ class CloudClient:
             if method.lower() == 'mmd':
                 mmd = mmd_rbf(data_np,gz_renorm)
                 res[method] = mmd
-                print('MMD:',mmd)
+                print(self.cloud_type,'MMD:',mmd)
             if method.lower() == 'dtw':
                 dtws = np.zeros(len(columns))
                 for i in range(len(columns)):
                     dtw_,_ = fastdtw(data_np[:,i:i+1], gz_renorm[:,i:i+1],dist=euclidean)
                     dtws[i] = dtw_
-                    print(columns[i],'DTW',dtw_)
+                    print(self.cloud_type,columns[i],'DTW',dtw_)
                 res[method] = dtws
             if method.lower() == 'pdtw':
                 sims = np.zeros(len(columns))
@@ -550,7 +549,7 @@ class CloudClient:
                     _,sim = fastpdtw(data_np[:,i],gz_renorm[:,i])
                     if type(sim) is list:
                         sim = sim[0]  
-                    print(columns[i],'PDTW',sim)
+                    print(self.cloud_type,columns[i],'PDTW',sim)
                     sims[i]=sim
                 res[method] = sims
         return res

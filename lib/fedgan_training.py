@@ -1,13 +1,12 @@
 '''
 Author: yooki(yooki.k613@gmail.com)
-LastEditTime: 2025-03-21 14:41:31
+LastEditTime: 2025-03-22 06:50:50
 Description: Federated GAN Training based on Data Synthesis Quality
 '''
 import copy
 from lib.utils import load_variants,save_variants,add_to_csv
 import data.parameters as parameters
-from lib.classes import ModelParas,CloudClient,torch,np,pd,os
-
+from lib.classes import ModelParas,CloudClient,torch,np,pd,os,threading
 def client(cloud: CloudClient,
         generate_paras: ModelParas = None,
         columes=['cpu_util'],
@@ -32,7 +31,6 @@ def client(cloud: CloudClient,
         args: argparse.Namespace, the other parameters
 
     """
-    print('cloud: ',cloud.cloud_type)
     if cloud.gzs is None:
         cloud.gzs = []
     if args is not None and args.weight in ['dtw','pdtw']:
@@ -51,13 +49,13 @@ def client(cloud: CloudClient,
             data_np,loss = cloud.train_gan(generate_paras,
             min(train_interval, train_epochs),
             train_type,columes,interval=loss_interval,is_pre=is_gan_pre,is_train=is_gan_train,is_first=(ii==0))
-            print("--------finished train gan------------")
+            print(cloud.cloud_type,"--------finished train gan------------")
             losses.append(loss)
             _, gz_renorm,_,_ = cloud.generate(generate_paras,columes,data_np,None,is_show=False)
             if np.isnan(gz_renorm).any():
                 raise ValueError('Generated data contains NaN!')
             r = cloud.evaluate(gz_renorm,generate_paras,columes,data_np,methods=e_methods)
-            print(f"{ii+1}/{epochs}: ",end=' ')
+            print(cloud.cloud_type.ljust(12),f"{ii+1}/{epochs}: ",end=' ')
             for method in e_methods:
                 res[method].append(r[method])
                 print(f"{method}={res[method]}", end=', ')
@@ -77,7 +75,7 @@ def client(cloud: CloudClient,
         df = pd.DataFrame(LS)
         filename__ = parameters.Paths['results']+f'/{cloud.cloud_type}/{train_type}_{cloud.id}_loss.csv'
         add_to_csv(filename__, df)
-        print(f"Saved loss to {filename__}")
+        print(cloud.cloud_type, f"Saved loss to {filename__}")
         
         EV = {'epoch': np.arange(train_interval+base_epoch, 1+base_epoch+generate_paras.num_epochs, train_interval).tolist()}
         for method in e_methods:
@@ -88,7 +86,7 @@ def client(cloud: CloudClient,
         df = pd.DataFrame(EV)
         filename_ = parameters.Paths['results']+f'/{cloud.cloud_type}/{train_type}_{cloud.id}_eval.csv'
         add_to_csv(filename_, df)
-        print(f"Saved eval to {filename_}")
+        print(cloud.cloud_type, f"Saved eval to {filename_}")
 
 def fedavg(w,weights):
     """Federated average
@@ -130,34 +128,39 @@ def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global
         id: int, the id
         **kwargs: the other parameters
     """
-    global_epoch = global_epoch
+    if not args.gan_not_train:
+        return
     for epoch in range(global_epoch):
         print(f"Rounds {epoch+1}/{global_epoch}")
         idx = np.random.choice(range(len(parameters.selected_Clouds)),K,replace=False)
         w_ds,w_es,w_gs,w_rs,w_ss,ns = [],[],[],[],[],[]
+        threads = []
         for i in idx:
             cloud = clouds[i]
-            client(cloud,generate_paras,columes,base_epoch=epoch*generate_paras.num_epochs,train_type = train_type,is_gan_pre=args.gan_is_pre,is_gan_train=args.gan_not_train, args=args)
-            if not args.gan_not_train:
-                continue
-            if args is not None and args.weight == 'pdtw':
-                pdtws = load_variants(f'pdtw_{id}')
-                ns.append(1/pdtws[cloud.cloud_type].mean())
-            elif args is not None and args.weight=='avg':
-                ns.append(1)
-            elif args is not None and args.weight=='dtw':
-                dtws = load_variants(f'dtw_{id}')
-                ns.append(1/dtws[cloud.cloud_type].mean())
-            else:
-                dataSizes = load_variants(f'dataSizes_{id}')
-                ns.append(dataSizes[cloud.cloud_type])
-            w_es.append(torch.load(parameters.Paths['timegan_model'] + "/%s/embedder_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_gs.append(torch.load(parameters.Paths['timegan_model'] + "/%s/generator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_rs.append(torch.load(parameters.Paths['timegan_model'] + "/%s/recovery_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_ss.append(torch.load(parameters.Paths['timegan_model'] + "/%s/supervisor_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-            w_ds.append(torch.load(parameters.Paths['timegan_model'] + "/%s/discriminator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
-        if not args.gan_not_train:
-            continue
+            generate_paras_ = copy.deepcopy(generate_paras)
+            generate_paras_.device = cloud.device
+            t = threading.Thread(target=client, args=(cloud,generate_paras_,columes,train_type,epoch*generate_paras.num_epochs,args.gan_not_train, args.gan_is_pre,10,args),daemon=True)
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+            # client(cloud,generate_paras,columes,base_epoch=epoch*generate_paras.num_epochs,train_type = train_type,is_gan_pre=args.gan_is_pre,is_gan_train=args.gan_not_train, args=args)
+        if args is not None and args.weight == 'pdtw':
+            pdtws = load_variants(f'pdtw_{id}')
+            ns.append(1/pdtws[cloud.cloud_type].mean())
+        elif args is not None and args.weight=='avg':
+            ns.append(1)
+        elif args is not None and args.weight=='dtw':
+            dtws = load_variants(f'dtw_{id}')
+            ns.append(1/dtws[cloud.cloud_type].mean())
+        else:
+            dataSizes = load_variants(f'dataSizes_{id}')
+            ns.append(dataSizes[cloud.cloud_type])
+        w_es.append(torch.load(parameters.Paths['timegan_model'] + "/%s/embedder_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+        w_gs.append(torch.load(parameters.Paths['timegan_model'] + "/%s/generator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+        w_rs.append(torch.load(parameters.Paths['timegan_model'] + "/%s/recovery_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+        w_ss.append(torch.load(parameters.Paths['timegan_model'] + "/%s/supervisor_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
+        w_ds.append(torch.load(parameters.Paths['timegan_model'] + "/%s/discriminator_%d.pt"%(cloud.cloud_type,id_), map_location=cloud.device))
         w_e = fedavg(w_es,ns)
         w_g = fedavg(w_gs,ns)
         w_r = fedavg(w_rs,ns)

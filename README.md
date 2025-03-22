@@ -67,7 +67,7 @@ Usage: bash run.sh [run_times] [args]
 Parameters required to run the program
 optional arguments:
   -h, --help            show this help message and exit
-  -g GPU, --gpu GPU     gpu device, if -1, use cpu
+  -g GPU, --gpu GPU     gpu device, if -1, use cpu; if None, use all gpu
   -c COLUMES, --columes COLUMES
                         dataset columes
   -n NOTE, --note NOTE  note of this run
@@ -126,7 +126,15 @@ bash run.sh 1 "-cs 0,1,2,3 -c cpu_util,mem_util -gle 500 -w pdtw -rf -sh -lrs ad
 ```
 where $1$ is the number of times to run `main.py`.
 
-Additionally, if you do not use the datasets in [data](https://github.com/liyan2015/P3Forecast/tree/main/data), you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py). The detailed dataset information is as explained in the paper.
+Additionally, if you do not use the datasets in [data](https://github.com/liyan2015/P3Forecast/tree/main/data), you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py). 
+And we also provide the code for preprocess the dataset in the file [lib/preprocess.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/preprocess.py) to refer.
+Please ensure that your datasets meets the following requirements:
+
+- **Format**: CSV file.
+- **Filename Convention**: The filename must follow the format `{cloud_type}_{freq}.csv`.
+- **Required Columns**: The CSV should include time and workload data. (For example, refer to the format of `Alibaba_1T.csv`.)
+
+The detailed dataset information is as explained in the paper.
 
 <!-- end run -->
 

@@ -3,3 +3,4 @@ output
 /data/HPC*
 __pycache__
 lib/timegan/images
+tmux*

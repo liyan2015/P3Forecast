@@ -100,7 +100,7 @@ class TimeGAN():
             else: # load local GAN model
                 path = Paths['timegan_model'] + "/%s/%s_%d.pt"%(self.name,key,self.id)
             self.model[key].load_state_dict(torch.load(path))
-        print(f'load TIMEGAN({path}) success!')
+        print(self.name, f'load TIMEGAN({path}) success!')
 
     def train(
         self,
@@ -170,7 +170,7 @@ class TimeGAN():
         optimizer_d = optim.Adam(self.model['discriminator'].parameters(),lr=lrs[2])
         for key in self.model.keys():
             self.model[key].train()
-        print("Start Embedding Network Training")
+        print(self.name,"Start Embedding Network Training")
         for step in range(1+self.gan_index*iteration, iteration + 1 + self.gan_index*iteration):
 
             x = batch_generator(dataset, self.batch_size).to(self.device)
@@ -184,7 +184,7 @@ class TimeGAN():
             optimizer_er.step()
 
             if step % interval == 0:
-                print(
+                print(self.name,
                     "step: "
                     + str(step)
                     + "/"
@@ -192,8 +192,8 @@ class TimeGAN():
                     + ", loss_e: "
                     + str(np.round(np.sqrt(loss_e_t0.item()), 4))
                 )
-        print("Finish Embedding Network Training")
-        print("Start Training with Supervised Loss Only")
+        print(self.name,"Finish Embedding Network Training")
+        print(self.name,"Start Training with Supervised Loss Only")
         for step in range(1+self.gan_index*iteration, iteration + 1 + self.gan_index*iteration):
             x = batch_generator(dataset, self.batch_size).to(self.device)
             z = torch.randn(self.batch_size, x.size(1), x.size(2)).to(self.device)
@@ -207,7 +207,7 @@ class TimeGAN():
             optimizer_gs.step()
 
             if step % interval == 0:
-                print(
+                print(self.name,
                     "step: "
                     + str(step)
                     + "/"
@@ -216,8 +216,8 @@ class TimeGAN():
                     + str(np.round(np.sqrt(loss_s.item()), 4))
                 )
 
-        print("Finish Training with Supervised Loss Only")
-        print("Start Joint Training")
+        print(self.name,"Finish Training with Supervised Loss Only")
+        print(self.name,"Start Joint Training")
         for step in range(1+self.gan_index*iteration, iteration + 1 + self.gan_index*iteration):
             for _ in range(2):
                 x = batch_generator(dataset, self.batch_size).to(self.device)
@@ -283,14 +283,14 @@ class TimeGAN():
                     + str(np.round(np.sqrt(loss_s.item()), 4))\
                     + ", loss_e_t0: "\
                     + str(np.round(np.sqrt(loss_e_t0.item()), 4))
-                print(txt)
+                print(self.name,txt)
                 
                 loss[0].append(loss_g.item())
                 loss[1].append(loss_g_u.item())
                 loss[2].append(loss_g_v.item())
                 loss[3].append(loss_d.item())
                 loss[4].append(loss_s.item())
-        print("Finish Joint Training")
+        print(self.name,"Finish Joint Training")
         self.gan_index += 1
         if self.save_model:
             if not os.path.exists(Paths['timegan_model']+'/'+self.name):
@@ -300,7 +300,7 @@ class TimeGAN():
                     torch.save(self.model[key].state_dict(), Paths['timegan_model']+"/%s/%s.pt"%(self.name,key))
                 else:
                     torch.save(self.model[key].state_dict(), Paths['timegan_model']+"/%s/%s_%d.pt"%(self.name,key,self.id))
-            print("Models saved")
+            print(self.name, "Models saved")
         return loss
 
     def generate(self, dataset, cols, dataset_size, isEvaluate=True):

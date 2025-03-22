@@ -1,6 +1,6 @@
 '''
 Author: yooki(yooki.k613@gmail.com)
-LastEditTime: 2025-03-21 14:48:28
+LastEditTime: 2025-03-22 06:39:43
 Description: main.py
 '''
 import data.parameters as parameters
@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     # ---------------main parameters---------------
 
-    parser.add_argument('-g','--gpu',type=int,default=0,help='gpu device, if -1, use cpu')
+    parser.add_argument('-g','--gpu',type=int,default=None,help='gpu device, if -1, use cpu; if None, use all gpu')
     parser.add_argument('-c','--columes',type=str,default='cpu_util,mem_util',help='dataset columes')
     parser.add_argument('-n','--note',type=str,default='',help='note of this run')
     parser.add_argument('-s','--seed',type=int,help='customize seed')
@@ -102,11 +102,18 @@ if __name__ == '__main__':
         print('Customize SEED:',parameters.SEED)
     np.random.seed(parameters.SEED)
     random.seed(parameters.SEED)
-    if cuda.is_available() and args.gpu>=0:
-        DEVICE = nndevice(f"cuda:{args.gpu}")
-        cuda.manual_seed(parameters.SEED)
+
+    if cuda.is_available() and args.gpu is not None:
+        if args.gpu >= 0:
+            DEVICE = nndevice(f"cuda:{args.gpu}")
+            cuda.manual_seed(parameters.SEED)
+        else:
+            DEVICE = "cpu"
     else:
-        DEVICE = "cpu"
+        num_gpu = cuda.device_count()
+        DEVICE = {}
+        for i,c in enumerate(parameters.selected_Clouds):
+            DEVICE[c] = nndevice(f"cuda:{i%num_gpu}")
 
     ID_ = parameters.ID
     if args.id is not None:
@@ -123,8 +130,7 @@ if __name__ == '__main__':
                         model_type=mode_type,
                         layer_size=args.layer_num,
                         input_size=len(columes),
-                        output_size=len(columes),
-                        device=DEVICE)
+                        output_size=len(columes))
     generate_paras = ModelParas(seq_length=args.seq_len+1,
                         batch_size=args.batch_size,
                         hidden_size=args.gan_hidden_size,
@@ -132,8 +138,7 @@ if __name__ == '__main__':
                         num_epochs=args.gan_local_epochs,
                         model_type=mode_type,
                         layer_size=args.gan_layer_num,
-                        input_size=len(columes),
-                        device=DEVICE)
+                        input_size=len(columes))
 
     if args.clouds is not None:
         parameters.selected_Clouds = [parameters.Clouds[int(i)] for i in args.clouds.split(',')]
@@ -146,7 +151,7 @@ if __name__ == '__main__':
             cal_stats(cloud,columes)
 
     
-    clouds = [CloudClient(cloud,parameters.ID,ID_, mu=paras['mu'][cloud],device=DEVICE) for cloud in parameters.selected_Clouds]
+    clouds = [CloudClient(cloud,parameters.ID,ID_, mu=paras['mu'][cloud],device=DEVICE if type(DEVICE)==str else DEVICE[cloud]) for cloud in parameters.selected_Clouds]
 
     # record logs
     logs = {
