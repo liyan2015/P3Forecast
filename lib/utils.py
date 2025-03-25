@@ -11,7 +11,7 @@ Description: utils
 (3) variant -> save_variants: Save variants to file
             -> load_variants: Load variants from file
 (4) add_to_csv: Add data to csv file
-(5) refresh_history: Automatically refresh historical data according to log.json
+(5) refresh_history: Automatically refresh historical output data according to log.json
 (6) metric: Evaluation metrics of the model
 '''
 
@@ -65,7 +65,7 @@ def read_json(filename=Paths['results']+'/log.json'):
 
 
 def refresh_history():
-    """Refresh the history data (eg. ./output/*) by ./output/log.json """
+    """Refresh the historical output data (eg. ./output/*) by ./output/log.json """
     logs = read_json()
     logs_ = copy.deepcopy(logs)
     import os,re

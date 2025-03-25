@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('-cs','--clouds',type=str,default=None,help='cloud indexs 0-6(Alibaba,Azure,Google,Alibaba-AI,HPC-KS,HPC-HF,HPC-WZ), such as 0,1,2,3,4,5,6')
     parser.add_argument('-p','--probability',type=float,default=1,help='the probability of cloud selected')
     parser.add_argument('-pd','--preprocess_dataset',action="store_true",help='with True preprocess dataset, without False directly use the preprocessed dataset')
-    parser.add_argument('-rf','--refresh',action="store_true",help='with True refresh histoty data, without False')
+    parser.add_argument('-rf','--refresh',action="store_true",help='with True refresh historical output data, without False')
 
     # ---------------Federated GAN parameters---------------
 

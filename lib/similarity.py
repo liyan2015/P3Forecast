@@ -15,7 +15,7 @@ from sklearn import metrics
 
 def fastpdtw(x, y, radius=1, dist=None):
     ''' return the approximate distance between 2 time series with O(N)
-        time and memory complexity
+        time and memory complexity using pattern-aware DTW.
 
         Parameters
         ----------

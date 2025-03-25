@@ -103,7 +103,7 @@ def post_training(predict_paras,generate_paras,clouds,columes,train_type,paras,a
                 interval = 5
                 tri_x = x[::interval][1:]-1
                 for j,col in enumerate(columes):
-                    tri_y = test_scores[::interval,j]
+                    tri_y = test_scores[::interval,j][1:]
                     ax.plot(x, test_scores[:,j],label=col)
                     ax.scatter(tri_x, tri_y)
                 # plt.title(f'Test accuracy on test datasets of {cloud.cloud_type} by {train_type}')

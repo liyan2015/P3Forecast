@@ -32,7 +32,7 @@ Our framework consists of the following three key components:
 
 <!-- start similarity -->
 
-The code in the file [lib/similarity.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/similarity.py) is for determining the similarity between the synthesized workload data and the original workload data.
+The code in the file [lib/similarity.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/similarity.py) is for determining the similarity between the synthesized workload data and the original workload data. Our proposed $pattern-aware DTW$, a novel Dynamic Time Warping (DTW)-based data synthesis quality assessment method, is implemented in the function `fastpdtw`.
 
 <!-- end similarity -->
 
@@ -79,7 +79,7 @@ optional arguments:
                         the probability of cloud selected
   -pd, --preprocess_dataset
                         with True preprocess dataset, without False directly use the preprocessed dataset
-  -rf, --refresh        with True refresh histoty data, without False
+  -rf, --refresh        with True refresh historical output data, without False
   -ghs GAN_HIDDEN_SIZE, --gan_hidden_size GAN_HIDDEN_SIZE
                         hidden size of timegan
   -gln GAN_LAYER_NUM, --gan_layer_num GAN_LAYER_NUM
@@ -126,6 +126,8 @@ bash run.sh 1 "-cs 0,1,2,3 -c cpu_util,mem_util -gle 500 -w pdtw -rf -sh -lrs ad
 ```
 where $1$ is the number of times to run `main.py`.
 
+We have provided pre-processed data from four public datasets ([`Alibaba`](https://github.com/alibaba/clusterdata/tree/master/cluster-trace-v2018), [`Azure`](https://github.com/msr-fiddle/philly-traces), [`Google`](https://github.com/google/cluster-data/blob/master), [`Alibaba-AI`](https://github.com/alibaba/clusterdata/tree/master)) in the folder [data](https://github.com/liyan2015/P3Forecast/tree/main/data). The more detailed dataset information is as explained in the paper.
+
 Additionally, if you do not use the datasets in [data](https://github.com/liyan2015/P3Forecast/tree/main/data), you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py). 
 And we also provide the code for preprocess the dataset in the file [lib/preprocess.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/preprocess.py) to refer.
 Please ensure that your datasets meets the following requirements:
@@ -134,8 +136,7 @@ Please ensure that your datasets meets the following requirements:
 - **Filename Convention**: The filename must follow the format `{cloud_type}_{freq}.csv`.
 - **Required Columns**: The CSV should include time and workload data. (For example, refer to the format of `Alibaba_1T.csv`.)
 
-The detailed dataset information is as explained in the paper.
-
+Finally, we offer a logging feature to facilitate the management of historical output data. All log entries (including arguments, model parameters, and other information) are stored in the `log.json` file within the output directory. You can remove specific timestamp entries from this file, and then run the program with the `-rf` parameter to clear the corresponding output data.
 <!-- end run -->
 
 ## Prerequisites
@@ -143,7 +144,7 @@ The detailed dataset information is as explained in the paper.
 To run the code, the following libraries are needed:
 
 - Python >= 3.9
-- fastdtw>=0.3.4
+- fastdtw==0.3.4
 - scikit_learn>=1.2.2
 - scipy>=1.10.1
 - Pytorch>=1.12.1
