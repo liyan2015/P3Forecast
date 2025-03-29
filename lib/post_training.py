@@ -11,7 +11,7 @@ from lib.classes import ModelParas,CloudClient,np,pd,threading
 def client(cloud: CloudClient,
         predict_paras: ModelParas = None,
         generate_paras: ModelParas = None,
-        columes=['cpu_util'],
+        columns=['cpu_util'],
         train_type = 'ours',
         metric_='rmse',
         base_epoch = 0,
@@ -23,7 +23,7 @@ def client(cloud: CloudClient,
         cloud: CloudClient, the cloud client
         predict_paras: ModelParas, the model parameters
         generate_paras: ModelParas, the model parameters
-        columes: list, the columns of data
+        columns: list, the columns of data
         train_type: str, the train type
         metric_: str, the evaluation metric
         base_epoch: int, the base epoch
@@ -36,8 +36,8 @@ def client(cloud: CloudClient,
     filename_ = ''
     if cloud.gzs is None:
         cloud.gzs = []
-    data_np,_ = cloud.train_gan(generate_paras,0,train_type,columes,interval=0,is_pre=True,is_train=False,is_first=True)
-    _, gz_renorm,_,gz = cloud.generate(generate_paras,columes,data_np,None,is_show=False)
+    data_np,_ = cloud.train_gan(generate_paras,0,train_type,columns,interval=0,is_pre=True,is_train=False,is_first=True)
+    _, gz_renorm,_,gz = cloud.generate(generate_paras,columns,data_np,None,is_show=False)
     if np.isnan(gz_renorm).any():
         raise ValueError('Generated data contains NaN!')
 
@@ -52,11 +52,11 @@ def client(cloud: CloudClient,
         'cloud': predict_paras.num_epochs * [cloud.cloud_type],
         'epoch': np.arange(1+base_epoch, predict_paras.num_epochs + 1 + base_epoch).tolist()
     }
-    test_scores,  train_scores= cloud.train(predict_paras,columes,base_epoch,metric_=metric_,is_save=True)
+    test_scores,  train_scores= cloud.train(predict_paras,columns,base_epoch,metric_=metric_,is_save=True)
     print(cloud.cloud_type, "--------finished train model------------")
-    for i in range(len(columes)):
-        DT[f"test_{columes[i]}"] = test_scores[:,i].tolist()
-        DT[f"train_{columes[i]}"] = train_scores[:,i].tolist()
+    for i in range(len(columns)):
+        DT[f"test_{columns[i]}"] = test_scores[:,i].tolist()
+        DT[f"train_{columns[i]}"] = train_scores[:,i].tolist()
     cloud.train_threshold = np.min(np.mean(train_scores,axis=1))
     # cloud.test_threshold = np.min(np.mean(test_scores,axis=1))
     df = pd.DataFrame(DT)
@@ -65,7 +65,7 @@ def client(cloud: CloudClient,
     print(cloud.cloud_type,f"save predictive results to {filename_}")
     return test_scores
 
-def post_training(predict_paras,generate_paras,clouds,columes,train_type,paras,args,K, metric_='rmse',is_show=False):
+def post_training(predict_paras,generate_paras,clouds,columns,train_type,paras,args,K, metric_='rmse',is_show=False):
     """Post training of local predictor
 
     Args:
@@ -73,7 +73,7 @@ def post_training(predict_paras,generate_paras,clouds,columes,train_type,paras,a
         predict_paras: ModelBase, the model parameters
         generate_paras: ModelBase, the model parameters
         clouds: list, the cloud clients
-        columes: list, the columns of data
+        columns: list, the columns of data
         train_type: str, the train type
         paras: dict, the custom parameters
         args: argparse.Namespace, the other parameters
@@ -90,19 +90,19 @@ def post_training(predict_paras,generate_paras,clouds,columes,train_type,paras,a
         generate_paras_.device = cloud.device
         predict_paras_.device = cloud.device
 
-        def run_client(cloud,predict_paras,generate_paras,columes,train_type,metric_,args):
+        def run_client(cloud,predict_paras,generate_paras,columns,train_type,metric_,args):
             print(f"Clients {index+1}/{K}: ",cloud.cloud_type)
             r = args.epochs//args.local_epochs_post
-            test_scores = np.zeros((args.epochs,len(columes)))
+            test_scores = np.zeros((args.epochs,len(columns)))
             for j in range(r):
-                test_scores[j*predict_paras.num_epochs:(j+1)*predict_paras.num_epochs,:] = client(cloud,custom_modelparas(predict_paras,cloud.cloud_type,paras,train_type),generate_paras,columes,base_epoch=j*predict_paras.num_epochs,train_type = train_type,metric_=metric_,args=args)
+                test_scores[j*predict_paras.num_epochs:(j+1)*predict_paras.num_epochs,:] = client(cloud,custom_modelparas(predict_paras,cloud.cloud_type,paras,train_type),generate_paras,columns,base_epoch=j*predict_paras.num_epochs,train_type = train_type,metric_=metric_,args=args)
 
             if is_show:
                 fig, ax = plt.subplots(1,1)
                 x = np.arange(1, args.epochs + 1)
                 interval = 5
                 tri_x = x[::interval][1:]-1
-                for j,col in enumerate(columes):
+                for j,col in enumerate(columns):
                     tri_y = test_scores[::interval,j][1:]
                     ax.plot(x, test_scores[:,j],label=col)
                     ax.scatter(tri_x, tri_y)
@@ -113,7 +113,7 @@ def post_training(predict_paras,generate_paras,clouds,columes,train_type,paras,a
                 fig.savefig(f'{parameters.Paths["images"]}/{cloud.cloud_type}_{train_type}_{cloud.id}.png')
                 plt.close(fig)
                 print(f"save plot to {parameters.Paths['images']}/{cloud.cloud_type}_{train_type}_{cloud.id}.png")
-        t = threading.Thread(target=run_client,args=(cloud,predict_paras_,generate_paras_,columes,train_type,metric_,args), daemon=True)     
+        t = threading.Thread(target=run_client,args=(cloud,predict_paras_,generate_paras_,columns,train_type,metric_,args), daemon=True)     
         t.start()
         threads.append(t)
     for t in threads:

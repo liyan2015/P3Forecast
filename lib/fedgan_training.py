@@ -9,7 +9,7 @@ import data.parameters as parameters
 from lib.classes import ModelParas,CloudClient,torch,np,pd,os,threading
 def client(cloud: CloudClient,
         generate_paras: ModelParas = None,
-        columes=['cpu_util'],
+        columns=['cpu_util'],
         train_type = 'ours',
         base_epoch = 0,
         is_gan_train = False,
@@ -22,7 +22,7 @@ def client(cloud: CloudClient,
     ------------
         cloud: CloudClient, the cloud client
         generate_paras: ModelParas, the model parameters
-        columes: list, the columns of data
+        columns: list, the columns of data
         train_type: str, the train type
         base_epoch: int, the base epoch
         is_gan_train: bool, whether to train the GAN model
@@ -48,13 +48,13 @@ def client(cloud: CloudClient,
         for ii in range(epochs):
             data_np,loss = cloud.train_gan(generate_paras,
             min(train_interval, train_epochs),
-            train_type,columes,interval=loss_interval,is_pre=is_gan_pre,is_train=is_gan_train,is_first=(ii==0))
+            train_type,columns,interval=loss_interval,is_pre=is_gan_pre,is_train=is_gan_train,is_first=(ii==0))
             print(cloud.cloud_type,"--------finished train gan------------")
             losses.append(loss)
-            _, gz_renorm,_,_ = cloud.generate(generate_paras,columes,data_np,None,is_show=False)
+            _, gz_renorm,_,_ = cloud.generate(generate_paras,columns,data_np,None,is_show=False)
             if np.isnan(gz_renorm).any():
                 raise ValueError('Generated data contains NaN!')
-            r = cloud.evaluate(gz_renorm,generate_paras,columes,data_np,methods=e_methods)
+            r = cloud.evaluate(gz_renorm,generate_paras,columns,data_np,methods=e_methods)
             print(cloud.cloud_type.ljust(12),f"{ii+1}/{epochs}: ",end=' ')
             for method in e_methods:
                 res[method].append(r[method])
@@ -112,7 +112,7 @@ def fedavg(w,weights):
             w_avg[k] += w[i][k] * weights[i]
     return w_avg
 
-def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global_epoch, id_, K=7, id=parameters.ID, args=None):
+def FL(generate_paras:ModelParas,train_type:str,clouds:list,columns:list, global_epoch, id_, K=7, id=parameters.ID, args=None):
     """ in Federated learning environment, train the gan model
 
     Args:
@@ -120,7 +120,7 @@ def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global
         generate_paras: ModelBase, the model parameters
         train_type: str, the train type
         clouds: list, the cloud clients
-        columes: list, the columns of data
+        columns: list, the columns of data
         global_epoch: int, the number of FL epochs
         paras: dict, the parameters
         id_: int, the id_ (use the model in id_)
@@ -139,12 +139,12 @@ def FL(generate_paras:ModelParas,train_type:str,clouds:list,columes:list, global
             cloud = clouds[i]
             generate_paras_ = copy.deepcopy(generate_paras)
             generate_paras_.device = cloud.device
-            t = threading.Thread(target=client, args=(cloud,generate_paras_,columes,train_type,epoch*generate_paras.num_epochs,args.gan_not_train, args.gan_is_pre,10,args),daemon=True)
+            t = threading.Thread(target=client, args=(cloud,generate_paras_,columns,train_type,epoch*generate_paras.num_epochs,args.gan_not_train, args.gan_is_pre,10,args),daemon=True)
             t.start()
             threads.append(t)
         for t in threads:
             t.join()
-            # client(cloud,generate_paras,columes,base_epoch=epoch*generate_paras.num_epochs,train_type = train_type,is_gan_pre=args.gan_is_pre,is_gan_train=args.gan_not_train, args=args)
+            # client(cloud,generate_paras,columns,base_epoch=epoch*generate_paras.num_epochs,train_type = train_type,is_gan_pre=args.gan_is_pre,is_gan_train=args.gan_not_train, args=args)
         if args is not None and args.weight == 'pdtw':
             pdtws = load_variants(f'pdtw_{id}')
             ns.append(1/pdtws[cloud.cloud_type].mean())

@@ -309,6 +309,8 @@ class TimeGAN():
         Args:
         --------------
             dataset: dataset
+            cols: columns
+            dataset_size: dataset size
             isEvaluate: if True, visualize the generated data
 
         Returns:

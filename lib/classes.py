@@ -170,29 +170,29 @@ class CloudClient:
     
     def __set_dataloader(self,
                         model_paras: ModelParas,
-                        columes: list,
+                        columns: list,
                         generated_data=[]):
         '''Normalize data and set the data loader => ``self.train_loader``,``self.test_loader``.
 
         Args:
         ------------
             model_paras: ModelBase, the model parameters
-            columes: list, the columes of data
+            columns: list, the columns of data
             generated_data: list, the generated data
         '''           
         if self.__train_loader is None:
-            datas = [self.df[x].values for x in columes]
+            datas = [self.df[x].values for x in columns]
             tsv = np.stack(datas, axis=1)
             index = int(len(tsv) * model_paras.train_percentage)
             train = tsv[0:index]
-            train = self.__normalize(train,len(columes))
+            train = self.__normalize(train,len(columns))
             train = torch.from_numpy(train).to(torch.float32)
             train_data = TimeSeriesDataset(train, model_paras.seq_length)
             self.__train_loader = [DataLoader(train_data,
                                     batch_size=model_paras.batch_size,
                                     shuffle=True)]
             self.ct = Center(self.id)
-            self.__test_loader = self.ct.get_center_test_datasets(model_paras, columes)
+            self.__test_loader = self.ct.get_center_test_datasets(model_paras, columns)
         if generated_data is not None and len(generated_data)>0:
             self.__train_loader+=[DataLoader(GenTimeSeriesDataset(generated_data,model_paras.seq_length),batch_size=model_paras.batch_size,shuffle=True)]
 
@@ -600,7 +600,7 @@ class Center(CloudClient):
         Args:
         -------------
         xs: [np.ndarray], the data
-        cs: int, the number of columes
+        cs: int, the number of columns
         """
         maxs,mins = [],[]
         for x in xs:
@@ -611,25 +611,25 @@ class Center(CloudClient):
 
     def __set_dataloader(self,
                         model_paras: ModelParas,
-                        columes: list):
+                        columns: list):
         '''Normalize data and set the data loader => ``self.train_loader``,``self.test_loader``.
 
         Args:
         ------------
             model_paras: ModelBase, the model parameters
-            columes: list, the columes of data
+            columns: list, the columns of data
         '''
         self.__train_loader = []
         self.__test_loader = []
         trains = []
         tests = []
         for df in self.dfs:               
-            datas = [df[x].values for x in columes]
+            datas = [df[x].values for x in columns]
             tsv = np.stack(datas, axis=1)
             index = int(len(tsv) * model_paras.train_percentage)
             trains.append(tsv[0:index])
             tests.append(tsv[index + 1:])
-        self.__set_max_min(trains,cs=len(columes))
+        self.__set_max_min(trains,cs=len(columns))
         for i in range(len(trains)):      
             test = tests[i]
             test = (test - self.__min_x[i]) / (self.__max_x[i] - self.__min_x[i])

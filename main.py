@@ -21,7 +21,7 @@ if __name__ == '__main__':
     # ---------------main parameters---------------
 
     parser.add_argument('-g','--gpu',type=int,default=None,help='gpu device, if -1, use cpu; if None, use all gpu')
-    parser.add_argument('-c','--columes',type=str,default='cpu_util,mem_util',help='dataset columes')
+    parser.add_argument('-c','--columns',type=str,default='cpu_util,mem_util',help='dataset columns')
     parser.add_argument('-n','--note',type=str,default='',help='note of this run')
     parser.add_argument('-s','--seed',type=int,help='customize seed')
     parser.add_argument('-id','--id',type=int,default=None,help='choose gan models with id')
@@ -89,9 +89,9 @@ if __name__ == '__main__':
         }
     }
     mode_type = args.model
-    columes = args.columes.split(',')
+    columns = args.columns.split(',')
     train_type = 'ours'
-    note = args.note
+    note = args.note 
     if args.learning_rate_strategy == 'fixed':
         lrs = args.learning_rate
     else:
@@ -129,8 +129,8 @@ if __name__ == '__main__':
                         num_epochs=args.local_epochs_post, 
                         model_type=mode_type,
                         layer_size=args.layer_num,
-                        input_size=len(columes),
-                        output_size=len(columes))
+                        input_size=len(columns),
+                        output_size=len(columns))
     generate_paras = ModelParas(seq_length=args.seq_len+1,
                         batch_size=args.batch_size,
                         hidden_size=args.gan_hidden_size,
@@ -138,7 +138,7 @@ if __name__ == '__main__':
                         num_epochs=args.gan_local_epochs,
                         model_type=mode_type,
                         layer_size=args.gan_layer_num,
-                        input_size=len(columes))
+                        input_size=len(columns))
 
     if args.clouds is not None:
         parameters.selected_Clouds = [parameters.Clouds[int(i)] for i in args.clouds.split(',')]
@@ -148,7 +148,7 @@ if __name__ == '__main__':
     
     if args.preprocess_dataset:
         for cloud in parameters.selected_Clouds:
-            cal_stats(cloud,columes)
+            cal_stats(cloud,columns)
 
     
     clouds = [CloudClient(cloud,parameters.ID,ID_, mu=paras['mu'][cloud],device=DEVICE if type(DEVICE)==str else DEVICE[cloud]) for cloud in parameters.selected_Clouds]
@@ -157,7 +157,7 @@ if __name__ == '__main__':
     logs = {
         str(parameters.ID):{
             'seed': parameters.SEED,
-            'columes':columes,
+            'columns':columns,
             'train_type':train_type,
             'global_epoch':args.rounds,
             'note':note if note != '' else 'weight is {args.weight}',
@@ -168,11 +168,11 @@ if __name__ == '__main__':
         }
     }
 
-    FL(generate_paras,train_type,clouds,columes,args.rounds,K=round(len(parameters.selected_Clouds)*args.probability), id=parameters.ID,id_=ID_,args=args)
+    FL(generate_paras,train_type,clouds,columns,args.rounds,K=round(len(parameters.selected_Clouds)*args.probability), id=parameters.ID,id_=ID_,args=args)
 
     save_json(logs)
 
-    post_training(predict_paras,generate_paras,clouds,columes,paras=paras,train_type = train_type,metric_=args.metric,is_show=args.show,K=round(len(parameters.selected_Clouds)*args.probability),args=args)
+    post_training(predict_paras,generate_paras,clouds,columns,paras=paras,train_type = train_type,metric_=args.metric,is_show=args.show,K=round(len(parameters.selected_Clouds)*args.probability),args=args)
     
     txt = print_time_lag(st,datetime.datetime.now(),'main')
     print(txt)

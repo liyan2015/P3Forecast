@@ -68,8 +68,8 @@ Parameters required to run the program
 optional arguments:
   -h, --help            show this help message and exit
   -g GPU, --gpu GPU     gpu device, if -1, use cpu; if None, use all gpu
-  -c COLUMES, --columes COLUMES
-                        dataset columes
+  -c COLUMNS, --columns COLUMNS
+                        dataset columns
   -n NOTE, --note NOTE  note of this run
   -s SEED, --seed SEED  customize seed
   -id ID, --id ID       choose gan models with id
