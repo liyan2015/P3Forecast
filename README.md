@@ -126,10 +126,10 @@ bash run.sh 1 "-cs 0,1,2,3 -c cpu_util,mem_util -gle 500 -w pdtw -rf -sh -lrs ad
 ```
 where $1$ is the number of times to run `main.py`.
 
-We have provided pre-processed data from four public datasets ([`Alibaba`](https://github.com/alibaba/clusterdata/tree/master/cluster-trace-v2018), [`Azure`](https://github.com/msr-fiddle/philly-traces), [`Google`](https://github.com/google/cluster-data/blob/master), [`Alibaba-AI`](https://github.com/alibaba/clusterdata/tree/master)) in the folder [data](https://github.com/liyan2015/P3Forecast/tree/main/data). The more detailed dataset information is as explained in the paper.
+We have provided pre-processed data from four public datasets ([`Alibaba`](https://github.com/alibaba/clusterdata/tree/master/cluster-trace-v2018), [`Azure`](https://github.com/msr-fiddle/philly-traces), [`Google`](https://github.com/google/cluster-data/blob/master), [`Alibaba-AI`](https://github.com/alibaba/clusterdata/tree/master)) in folder [data](https://github.com/liyan2015/P3Forecast/tree/main/data). More details about the dataset can be found in the paper.
 
 Additionally, if you do not use the datasets in [data](https://github.com/liyan2015/P3Forecast/tree/main/data), you should set some parameters about the dataset in the file [parameters.py](https://github.com/liyan2015/P3Forecast/tree/main/parameters.py). 
-And we also provide the code for preprocess the dataset in the file [lib/preprocess.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/preprocess.py) to refer.
+And we also provide the code for preprocessing the datasets in the file [lib/preprocess.py](https://github.com/liyan2015/P3Forecast/tree/main/lib/preprocess.py).
 Please ensure that your datasets meets the following requirements:
 
 - **Format**: CSV file.
