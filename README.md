@@ -21,7 +21,7 @@ controlling the impact of training dataset size on learning rate) </td>
 </table>
 
 
-Our framework consists of the following three key components:
+$P^{3}Forecast$ consists of the following three key components:
 
 <p align="center">
 <img src="fig/framework.png" align="center" width="80%"/>
