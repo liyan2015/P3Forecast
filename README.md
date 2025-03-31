@@ -13,8 +13,9 @@ Compared with the state-of-the-art, our framwork improves workload prediction ac
     <td width="33%"><img src="fig/convergence_of_federated_gan.png" width="396" ></td>
   </tr>
   <tr>
-    <td width="33%">Testing accuracy over epochs with uniform $\mu$ </td>
-    <td width="33%">Testing accuracy over epochs with optimal $\mu$ </td>
+    <td width="33%">Testing accuracy over epochs with uniform $\mu$ (the constant
+controlling the impact of training dataset size on learning rate) </td>
+    <td width="33%">Testing accuracy over epochs with the optimal $\mu$ </td>
     <td width="33%">Convergence performance of Federated GAN</td>
   </tr>
 </table>
